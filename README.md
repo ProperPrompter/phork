@@ -292,7 +292,9 @@ No external file uploads exist. Every asset must be created by an on-platform ge
 
 ### Signed URLs
 
-Asset file streaming (`/assets/:id/file`) is protected by time-limited, HMAC-signed URL tokens rather than JWT auth. This allows HTML `<video>` and `<audio>` elements to fetch media directly without custom auth headers. Tokens are generated server-side via `GET /assets/:id` (which requires JWT auth) and expire after a short window.
+Asset file streaming (`/assets/:id/file`) is protected by time-limited, HMAC-signed URL tokens rather than JWT auth. This allows HTML `<video>` and `<audio>` elements to fetch media directly without custom auth headers. Tokens are generated server-side via `GET /assets/:id` (which requires JWT auth + workspace membership) and expire after 15 minutes.
+
+**Multi-user alpha posture: "shareable but short-lived."** The signed URL does not include userId or workspaceId in the HMAC input, so a URL can technically be shared with anyone who obtains it. This is accepted for internal alpha because: (a) tokens expire in 15 minutes, (b) obtaining the URL requires JWT auth + workspace membership verification, (c) all assets are AI-generated content (not user-uploaded PII), and (d) all asset access is logged via the provenance chain. If "no sharing" becomes a requirement for external beta, the file endpoint (`/assets/:id/file`) must be upgraded to authenticated fetch (cookie/session-based) with a membership check on every request.
 
 ### Idempotency
 

@@ -12,11 +12,12 @@
  *
  * The refund is a positive delta ledger entry with reason prefix "refund:".
  *
- * IDEMPOTENCY: refundJob() checks the ledger for an existing refund
- * for the same job_id before issuing. At most ONE refund per job.
+ * IDEMPOTENCY: Enforced at the database level via a partial unique index
+ * `credit_ledger_one_refund_per_job` on (job_id) WHERE delta > 0.
+ * The refund uses INSERT ... ON CONFLICT DO NOTHING so that concurrent
+ * callers are serialized by the unique index — at most ONE refund per job,
+ * even under concurrent BullMQ retries.
  */
-import { eq, and, gt } from 'drizzle-orm';
-import { creditAccounts, creditLedger } from '@phork/db';
 import type { Database } from '@phork/db';
 import { sql } from 'drizzle-orm';
 
@@ -42,38 +43,36 @@ export async function refundJob(
   const cost = JOB_COSTS[job.type] || 0;
   if (cost === 0) return { refunded: false, alreadyRefunded: false };
 
-  // ── Idempotency guard: check if a refund already exists for this job ──
-  const [existingRefund] = await db.select().from(creditLedger)
-    .where(
-      and(
-        eq(creditLedger.jobId, job.id),
-        gt(creditLedger.delta, 0)  // Positive delta = refund
-      )
+  // ── Atomic concurrent-safe refund ──
+  // Uses a CTE with INSERT ... ON CONFLICT DO NOTHING (partial unique index
+  // on credit_ledger(job_id) WHERE delta > 0). If the insert succeeds, the
+  // CTE returns the new row and the UPDATE credits the balance. If the insert
+  // conflicts (refund already exists), no row is returned and the UPDATE is
+  // a no-op (EXISTS is false → 0 rows updated).
+  const result = await db.execute(
+    sql`WITH refund_insert AS (
+      INSERT INTO credit_ledger (id, workspace_id, user_id, job_id, project_id, delta, reason)
+      VALUES (gen_random_uuid(), ${job.workspaceId}, ${job.userId}, ${job.id}, ${job.projectId}, ${cost}, ${'refund: ' + reason})
+      ON CONFLICT (job_id) WHERE delta > 0 DO NOTHING
+      RETURNING id
     )
-    .limit(1);
+    UPDATE credit_accounts
+    SET balance = balance + ${cost}
+    WHERE workspace_id = ${job.workspaceId}
+      AND EXISTS (SELECT 1 FROM refund_insert)
+    RETURNING workspace_id`
+  );
 
-  if (existingRefund) {
+  // If the UPDATE returned a row, the refund was applied (insert succeeded).
+  // If no rows, the insert was a no-op (conflict) — already refunded.
+  const wasRefunded = (result as any).count > 0;
+
+  if (!wasRefunded) {
     console.warn(`refundJob: refund already exists for job ${job.id}, skipping (idempotent)`);
-    return { refunded: false, alreadyRefunded: true };
   }
 
-  // ── Atomic refund: credit balance + write ledger entry ──
-  await db.transaction(async (tx: any) => {
-    // Atomic balance credit (no read-then-write race)
-    await tx.execute(
-      sql`UPDATE credit_accounts SET balance = balance + ${cost} WHERE workspace_id = ${job.workspaceId}`
-    );
-
-    // Write reversal ledger entry (positive delta)
-    await tx.insert(creditLedger).values({
-      workspaceId: job.workspaceId,
-      userId: job.userId,
-      jobId: job.id,
-      projectId: job.projectId,
-      delta: +cost, // Positive = credit returned
-      reason: `refund: ${reason}`,
-    });
-  });
-
-  return { refunded: true, alreadyRefunded: false };
+  return {
+    refunded: wasRefunded,
+    alreadyRefunded: !wasRefunded,
+  };
 }

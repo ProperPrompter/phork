@@ -158,6 +158,9 @@ export const creditLedger = pgTable('credit_ledger', {
   reason: text('reason').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
+// NOTE: A partial unique index `credit_ledger_one_refund_per_job`
+// is created via raw SQL on (job_id) WHERE delta > 0 to enforce
+// at most one refund per job at the database level. See schema push.
 
 // ──────────────────────────────────────────────
 // Safety

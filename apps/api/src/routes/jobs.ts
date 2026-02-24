@@ -51,6 +51,14 @@ export async function jobRoutes(app: FastifyInstance) {
     requestData: any,
     idempotencyKey: string,
   ) {
+    // 0. Verify workspace membership — prevent cross-tenant job submission
+    const [membership] = await db.select().from(workspaceMembers)
+      .where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId)))
+      .limit(1);
+    if (!membership) {
+      throw { statusCode: 403, message: 'Not a member of this workspace' };
+    }
+
     // 1. Check idempotency FIRST — before any credit operations
     const [existing] = await db.select().from(jobs).where(
       and(eq(jobs.workspaceId, workspaceId), eq(jobs.idempotencyKey, idempotencyKey))
