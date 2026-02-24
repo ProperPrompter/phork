@@ -1,0 +1,29 @@
+{
+  "name": "phork",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "db:generate": "turbo db:generate --filter=@phork/db",
+    "db:migrate": "turbo db:migrate --filter=@phork/db",
+    "db:push": "turbo db:push --filter=@phork/db"
+  },
+  "packageManager": "pnpm@10.30.2",
+  "devDependencies": {
+    "puppeteer-core": "^24.37.5",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msgpackr-extract",
+      "sharp"
+    ]
+  }
+}

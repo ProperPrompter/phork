@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.next/
+.turbo/
+*.env
+*.env.local
+.DS_Store
+storage/
+redis-bin/
+redis.zip
+dump.rdb
+test_output.mp4
+*.mp4
+*.mp3
+*.png
