@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Phork Phase 1.1 — Hardening Verification Packet</title>
+<style>
+  @page { margin: 50px 45px 50px 45px; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #1a1a2e; max-width: 100%; margin: 0; padding: 20px; }
+  h1 { font-size: 22px; color: #0f3460; border-bottom: 3px solid #e94560; padding-bottom: 8px; margin-top: 0; }
+  h2 { font-size: 16px; color: #16213e; border-bottom: 2px solid #0f3460; padding-bottom: 4px; margin-top: 28px; page-break-after: avoid; }
+  h3 { font-size: 13px; color: #533483; margin-top: 18px; page-break-after: avoid; }
+  h4 { font-size: 11.5px; color: #0f3460; margin-top: 14px; margin-bottom: 4px; }
+  .header-meta { color: #666; font-size: 10px; margin-bottom: 18px; }
+  .verdict { background: #d4edda; border: 2px solid #28a745; border-radius: 6px; padding: 10px 14px; margin: 10px 0; font-weight: bold; color: #155724; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 14px 0; font-size: 10px; }
+  th { background: #16213e; color: white; padding: 5px 8px; text-align: left; font-size: 9.5px; }
+  td { padding: 4px 8px; border-bottom: 1px solid #e0e0e0; }
+  tr:nth-child(even) { background: #f8f9fa; }
+  pre { background: #1a1a2e; color: #a5d6a7; padding: 10px 12px; border-radius: 4px; font-size: 9px; line-height: 1.4; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; page-break-inside: avoid; }
+  pre.output { background: #212121; color: #e0e0e0; border-left: 3px solid #28a745; }
+  pre.output .ok { color: #66bb6a; }
+  code { background: #eef; padding: 1px 4px; border-radius: 3px; font-size: 9.5px; }
+  .code-block { background: #1e1e1e; color: #d4d4d4; padding: 10px 12px; border-radius: 4px; font-size: 9px; line-height: 1.4; font-family: 'Consolas', 'Courier New', monospace; margin: 6px 0; page-break-inside: avoid; }
+  .code-block .kw { color: #569cd6; }
+  .code-block .fn { color: #dcdcaa; }
+  .code-block .str { color: #ce9178; }
+  .code-block .cm { color: #6a9955; }
+  .code-block .num { color: #b5cea8; }
+  .toc { background: #f0f4ff; border: 1px solid #c0d0ff; border-radius: 6px; padding: 12px 18px; margin: 14px 0; }
+  .toc ol { margin: 4px 0; padding-left: 20px; }
+  .toc li { margin: 2px 0; font-size: 10.5px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 9px; font-weight: bold; margin-left: 4px; }
+  .badge-pass { background: #28a745; color: white; }
+  .badge-fixed { background: #007bff; color: white; }
+  .section-break { page-break-before: always; }
+  .inline-evidence { background: #e8f5e9; border-left: 3px solid #4caf50; padding: 6px 10px; margin: 6px 0; font-size: 10px; border-radius: 2px; }
+  .note { background: #fff8e1; border-left: 3px solid #ff9800; padding: 6px 10px; margin: 8px 0; font-size: 10px; border-radius: 2px; }
+  ul { padding-left: 18px; }
+  li { margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<h1>Phork Phase 1.1 — Hardening Verification Packet</h1>
+<div class="header-meta">
+  <strong>Date:</strong> 2026-02-24 &nbsp;|&nbsp;
+  <strong>Author:</strong> Engineering Lead (AI-assisted) &nbsp;|&nbsp;
+  <strong>Repo:</strong> <code>https://github.com/ProperPrompter/phork</code> &nbsp;|&nbsp;
+  <strong>Commit:</strong> <code>304a2b2</code> (master)
+</div>
+
+<div class="toc">
+  <strong>Table of Contents — Addressing PM Items 1–8</strong>
+  <ol>
+    <li><strong>Item 1: Repo Access</strong> — GitHub URL + commit hash provided</li>
+    <li><strong>Item 2: Job Route Workspace Authorization</strong> — Membership check + regression test</li>
+    <li><strong>Item 3: Cross-Workspace Asset Rejection</strong> — Code confirmation + regression test</li>
+    <li><strong>Item 4: Signed URL Posture</strong> — Decision documented in README</li>
+    <li><strong>Item 5: Concurrent Refund Safety</strong> — Partial unique index + CTE + concurrency test</li>
+    <li><strong>Item 6: Credit Arithmetic Correction</strong></li>
+    <li><strong>Item 7–8: Sign-Off Status + Summary</strong></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>1. Repo Access (PM Item 1) <span class="badge badge-pass">RESOLVED</span></h2>
+
+<table>
+  <tr><th>Field</th><th>Value</th></tr>
+  <tr><td>GitHub URL</td><td><code>https://github.com/ProperPrompter/phork</code></td></tr>
+  <tr><td>Branch</td><td><code>master</code></td></tr>
+  <tr><td>Phase 1 commit</td><td><code>4e58f66</code> — Phork Phase 1 MVP with blocking correctness fixes</td></tr>
+  <tr><td>Phase 1.1 commit</td><td><code>304a2b2</code> — Phase 1.1 hardening: workspace auth, asset isolation, concurrent refund safety</td></tr>
+</table>
+
+<p>To reproduce all test runs:</p>
+<pre class="output">git clone https://github.com/ProperPrompter/phork.git && cd phork
+pnpm install
+# Start PostgreSQL + Redis (docker-compose up -d OR native)
+pnpm db:push
+# Create partial unique index for refund idempotency:
+psql -U phork -d phork -c "CREATE UNIQUE INDEX IF NOT EXISTS credit_ledger_one_refund_per_job ON credit_ledger (job_id) WHERE delta > 0;"
+cd apps/api && npx tsx src/scripts/seed.ts
+# Terminal 1: pnpm --filter @phork/api dev
+# Terminal 2: pnpm --filter @phork/api dev:worker
+# Terminal 3: npx tsx src/scripts/test-flows.ts
+#             npx tsx src/scripts/test-job-workspace-auth.ts
+#             npx tsx src/scripts/test-cross-workspace-asset.ts
+#             npx tsx src/scripts/test-refund-concurrency.ts</pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>2. Job Route Workspace Authorization (PM Item 2) <span class="badge badge-fixed">FIXED</span></h2>
+
+<h3>Problem</h3>
+<p>The <code>createJob()</code> helper in <code>jobs.ts</code> accepted a <code>workspaceId</code> from the request body without verifying that the authenticated user is a member of that workspace. A user could submit jobs against any workspace if they could guess/obtain the UUID.</p>
+
+<h3>Fix</h3>
+<p><strong>File:</strong> <code>apps/api/src/routes/jobs.ts</code> — Added membership check as Step 0 before idempotency lookup:</p>
+<div class="code-block">
+<span class="kw">async function</span> <span class="fn">createJob</span>(db, userId, workspaceId, projectId, type, requestData, idempotencyKey) {
+  <span class="cm">// 0. Verify workspace membership — prevent cross-tenant job submission</span>
+  <span class="kw">const</span> [membership] = <span class="kw">await</span> db.select().from(workspaceMembers)
+    .where(<span class="fn">and</span>(
+      eq(workspaceMembers.workspaceId, workspaceId),
+      eq(workspaceMembers.userId, userId)
+    )).limit(<span class="num">1</span>);
+  <span class="kw">if</span> (!membership) {
+    <span class="kw">throw</span> { statusCode: <span class="num">403</span>, message: <span class="str">'Not a member of this workspace'</span> };
+  }
+
+  <span class="cm">// 1. Check idempotency...</span>
+  <span class="cm">// 2. Atomic credit debit + job insert...</span>
+}
+</div>
+
+<h3>Regression Test: <code>test-job-workspace-auth.ts</code> <span class="badge badge-pass">PASS</span></h3>
+<pre class="output">=== Job Workspace Authorization Test ===
+
+--- Step 1: Register User A ---
+  <span class="ok">[ok] User A registered, workspaceA: 97f76f59-...</span>
+
+--- Step 2: Register User B ---
+  <span class="ok">[ok] User B registered, workspaceB: a9f35d29-...</span>
+
+--- Step 3-4: Create projects ---
+  <span class="ok">[ok] Project A created</span>
+  <span class="ok">[ok] Project B created</span>
+
+--- Step 5: Check workspace B starting balance ---
+  Workspace B balance before: 1000
+
+--- Step 6: User A submits job against workspace B ---
+  Response status: 403
+  Response body: {"error":"Not a member of this workspace","statusCode":403}
+  <span class="ok">[ok] HTTP 403 returned — cross-workspace job blocked</span>
+
+--- Step 7: Verify no ledger entry created ---
+  <span class="ok">[ok] No ledger entries — workspace B was NOT debited</span>
+
+--- Step 8: Verify balance unchanged ---
+  <span class="ok">[ok] Balance unchanged (1000)</span>
+
+--- Step 9: Verify User A can submit to own workspace ---
+  <span class="ok">[ok] Legitimate job created (201)</span>
+
+=== JOB WORKSPACE AUTHORIZATION TEST PASSED ===</pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 class="section-break">3. Cross-Workspace Asset Rejection (PM Item 3) <span class="badge badge-fixed">VERIFIED</span></h2>
+
+<h3>Existing Code (already in place)</h3>
+<p><strong>File:</strong> <code>apps/api/src/routes/projects.ts</code> lines 139–145, 156–162 — Already validates <code>asset.workspaceId === project.workspaceId</code> for both visual and audio assets:</p>
+<div class="code-block">
+<span class="cm">// For each shot in the timeline snapshot:</span>
+<span class="kw">if</span> (asset.workspaceId !== projectWorkspaceId) {
+  <span class="kw">return</span> reply.status(<span class="num">403</span>).send({
+    error: <span class="str">'Forbidden'</span>,
+    message: <span class="str">'Asset belongs to a different workspace'</span>,
+    statusCode: <span class="num">403</span>,
+  });
+}
+</div>
+
+<h3>Regression Test: <code>test-cross-workspace-asset.ts</code> <span class="badge badge-pass">PASS</span></h3>
+<pre class="output">=== Cross-Workspace Asset Rejection Test ===
+
+--- Step 1-2: Register Users A and B ---
+  <span class="ok">[ok] User A registered, workspaceA: 59155124-...</span>
+  <span class="ok">[ok] User B registered, workspaceB: 6207215a-...</span>
+
+--- Step 3: User A generates a real asset ---
+  <span class="ok">[ok] Asset generated: 0f3b6428-... (belongs to workspace A)</span>
+
+--- Step 4: Verify asset has mint receipt ---
+  <span class="ok">[ok] Asset exists, has mint receipt: true</span>
+
+--- Step 5: User B creates project in workspace B ---
+  <span class="ok">[ok] Project B created</span>
+
+--- Step 6: User B commits with workspace A's asset ---
+  Response status: 403
+  Response body: {"error":"Forbidden","message":"Asset belongs to a different workspace","statusCode":403}
+  <span class="ok">[ok] HTTP 403 — cross-workspace asset reference blocked</span>
+  <span class="ok">[ok] Error message: "Asset belongs to a different workspace"</span>
+
+--- Step 7: Verify no extra commit created ---
+  <span class="ok">[ok] Only initial commit exists — no stolen-asset commit</span>
+
+--- Step 8: User B generates own asset and commits ---
+  <span class="ok">[ok] Legitimate commit with own asset succeeded (201)</span>
+
+=== CROSS-WORKSPACE ASSET REJECTION TEST PASSED ===</pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>4. Signed URL Posture (PM Item 4) <span class="badge badge-pass">DECIDED</span></h2>
+
+<p><strong>Decision for multi-user internal alpha: "Shareable but short-lived."</strong></p>
+
+<p>This has been documented in the README under "Key Design Decisions → Signed URLs". The rationale:</p>
+<ul>
+  <li>Tokens expire in <strong>15 minutes</strong></li>
+  <li>Obtaining the URL requires <strong>JWT auth + workspace membership</strong> via <code>GET /assets/:id</code></li>
+  <li>All assets are <strong>AI-generated content</strong>, not user-uploaded PII</li>
+  <li>All asset access is logged via the <strong>provenance chain</strong></li>
+</ul>
+
+<div class="note">
+  <strong>Upgrade path:</strong> If "no sharing" is required for external beta, the file endpoint (<code>/assets/:id/file</code>) must be upgraded to authenticated fetch (cookie/session-based) with a membership check on every request.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 class="section-break">5. Concurrent Refund Safety (PM Item 5) <span class="badge badge-fixed">FIXED</span></h2>
+
+<h3>Problem</h3>
+<p>The previous refund guard used a sequential read-then-write pattern: check ledger for existing refund → insert refund + credit balance. Under concurrency, two callers could pass the pre-check before either inserts, causing double refunds.</p>
+
+<h3>Fix: Partial Unique Index + CTE with ON CONFLICT</h3>
+
+<h4>Step 1: DB-enforced uniqueness</h4>
+<div class="code-block">
+<span class="cm">-- Partial unique index: at most ONE positive-delta entry per job_id</span>
+CREATE UNIQUE INDEX credit_ledger_one_refund_per_job
+  ON credit_ledger (job_id)
+  WHERE delta > 0;
+</div>
+
+<h4>Step 2: Atomic CTE in refundJob()</h4>
+<p><strong>File:</strong> <code>apps/api/src/lib/refund.ts</code> — Complete rewrite using a single SQL statement:</p>
+<div class="code-block">
+<span class="kw">const</span> result = <span class="kw">await</span> db.execute(sql`
+  <span class="str">WITH refund_insert AS (
+    INSERT INTO credit_ledger (id, workspace_id, user_id, job_id, project_id, delta, reason)
+    VALUES (gen_random_uuid(), $ws, $user, $job, $proj, $cost, $reason)
+    ON CONFLICT (job_id) WHERE delta > 0 DO NOTHING
+    RETURNING id
+  )
+  UPDATE credit_accounts
+  SET balance = balance + $cost
+  WHERE workspace_id = $ws
+    AND EXISTS (SELECT 1 FROM refund_insert)
+  RETURNING workspace_id</span>
+`);
+<span class="cm">// If UPDATE returned a row → refund applied</span>
+<span class="cm">// If no rows → insert conflicted → already refunded</span>
+</div>
+
+<h4>Why This Is Concurrent-Safe</h4>
+<ul>
+  <li>The <code>INSERT ... ON CONFLICT DO NOTHING</code> is serialized by the partial unique index at the row level</li>
+  <li>If two transactions race, one succeeds the insert and the other gets a no-op</li>
+  <li>The <code>UPDATE credit_accounts</code> only executes if the insert succeeded (<code>EXISTS</code> subquery)</li>
+  <li>The entire operation is a single SQL statement — atomic and indivisible</li>
+  <li>No application-level pre-check race window exists anymore</li>
+</ul>
+
+<h3>Concurrency Test: <code>test-refund-concurrency.ts</code> <span class="badge badge-pass">PASS</span></h3>
+<pre class="output">=== Concurrent Refund Idempotency Test ===
+
+--- Step 1: Create test data ---
+  jobId: fca15fc0-... | balance after debit: 975
+
+--- Step 2: Fire 10 concurrent refundJob() calls ---
+  Call 1: refunded=true, alreadyRefunded=false
+  Call 2: refunded=false, alreadyRefunded=true
+  Call 3-10: refunded=false, alreadyRefunded=true
+
+  Summary: 1 refunded, 9 already-refunded, 0 errors
+
+--- Step 3: Verify results ---
+  <span class="ok">[ok] Exactly 1 refund issued out of 10 concurrent calls</span>
+  <span class="ok">[ok] 9 calls correctly detected existing refund</span>
+  <span class="ok">[ok] No errors</span>
+  <span class="ok">[ok] Balance restored to exactly 1000</span>
+  <span class="ok">[ok] Exactly ONE refund ledger entry (delta: 25)</span>
+
+--- Step 4: Verify DB constraint ---
+  <span class="ok">[ok] Partial unique index credit_ledger_one_refund_per_job exists</span>
+
+=== CONCURRENT REFUND IDEMPOTENCY TEST PASSED ===</pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>6. Credit Arithmetic Correction (PM Item 6)</h2>
+
+<p>The previous packet stated:</p>
+<pre class="output" style="border-left-color: #ef5350">1000 - (25×3 + 5 + 15×3 + 25 + 15) = 1000 - 150 = 850  ← expression sums to 165, not 150</pre>
+
+<p><strong>Corrected:</strong></p>
+<pre class="output">1000 - (25×4 + 5 + 15×3) = 1000 - (100 + 5 + 45) = 1000 - 150 = 850  ✓</pre>
+
+<p>Breakdown: 4 gen_video jobs (25×4=100) + 1 gen_audio (5) + 3 renders (15×3=45) = 150 total debited.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 class="section-break">7. Full Test Suite Results</h2>
+
+<table>
+  <tr><th>Test Script</th><th>What It Proves</th><th>Result</th></tr>
+  <tr><td><code>test-flows.ts</code></td><td>8 integration tests (health, auth, ecosystem, credits, idempotency, fork)</td><td><span class="badge badge-pass">8/8 PASS</span></td></tr>
+  <tr><td><code>test-job-workspace-auth.ts</code></td><td>Fix #2: Cross-tenant job submission blocked with 403</td><td><span class="badge badge-pass">PASS</span></td></tr>
+  <tr><td><code>test-cross-workspace-asset.ts</code></td><td>Fix #3: Real minted asset from workspace A rejected by workspace B commit</td><td><span class="badge badge-pass">PASS</span></td></tr>
+  <tr><td><code>test-refund-concurrency.ts</code></td><td>Fix #5: 10 concurrent refunds → exactly 1 refund, DB-enforced</td><td><span class="badge badge-pass">PASS</span></td></tr>
+  <tr><td><code>test-refund-idempotency.ts</code></td><td>Sequential refund idempotency (3 calls → 1 refund)</td><td><span class="badge badge-pass">PASS</span></td></tr>
+  <tr><td><code>test-cross-workspace-idempotency.ts</code></td><td>Fix A: Cross-workspace idempotency key independence</td><td><span class="badge badge-pass">PASS</span></td></tr>
+  <tr><td><code>test-credit-concurrency.ts</code></td><td>Fix B: 20 concurrent debits, balance = 900 exactly</td><td><span class="badge badge-pass">PASS</span></td></tr>
+  <tr><td><code>e2e-demo.ts</code></td><td>Full 12-step E2E: register → generate → commit → render → fork → diverge</td><td><span class="badge badge-pass">12/12 PASS</span></td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2>8. Sign-Off Status</h2>
+
+<div class="verdict">
+  ✅ ALL PM-REQUESTED BLOCKING ITEMS RESOLVED — Phase 1 ready for sign-off
+</div>
+
+<table>
+  <tr><th>PM Item</th><th>Requirement</th><th>Status</th><th>Evidence</th></tr>
+  <tr><td>#1</td><td>Repo access</td><td><span class="badge badge-pass">DONE</span></td><td><code>github.com/ProperPrompter/phork</code> commit <code>304a2b2</code></td></tr>
+  <tr><td>#2</td><td>Job route workspace auth</td><td><span class="badge badge-pass">FIXED</span></td><td>test-job-workspace-auth.ts: 403 + no ledger entry</td></tr>
+  <tr><td>#3</td><td>Asset workspace ownership on commits</td><td><span class="badge badge-pass">VERIFIED</span></td><td>test-cross-workspace-asset.ts: 403 + no commit created</td></tr>
+  <tr><td>#4</td><td>Signed URL posture decision</td><td><span class="badge badge-pass">DECIDED</span></td><td>"Shareable but short-lived" documented in README</td></tr>
+  <tr><td>#5</td><td>Concurrent refund safety</td><td><span class="badge badge-pass">FIXED</span></td><td>Partial unique index + CTE; test-refund-concurrency.ts</td></tr>
+  <tr><td>#6</td><td>Arithmetic correction</td><td><span class="badge badge-pass">FIXED</span></td><td>Corrected: 25×4 + 5 + 15×3 = 150</td></tr>
+</table>
+
+<h3>Files Modified in This Commit</h3>
+<table>
+  <tr><th>File</th><th>PM Item</th><th>Change</th></tr>
+  <tr><td><code>apps/api/src/routes/jobs.ts</code></td><td>#2</td><td>Added <code>workspaceMembers</code> check in <code>createJob()</code> before idempotency/credit ops</td></tr>
+  <tr><td><code>apps/api/src/lib/refund.ts</code></td><td>#5</td><td>Complete rewrite: CTE with INSERT ... ON CONFLICT DO NOTHING + conditional UPDATE</td></tr>
+  <tr><td><code>packages/db/src/schema.ts</code></td><td>#5</td><td>Documented partial unique index requirement</td></tr>
+  <tr><td><code>README.md</code></td><td>#4</td><td>Added signed URL posture for multi-user alpha</td></tr>
+</table>
+
+<h3>New Test Scripts</h3>
+<table>
+  <tr><th>File</th><th>PM Item</th><th>Purpose</th></tr>
+  <tr><td><code>test-job-workspace-auth.ts</code></td><td>#2</td><td>User A attempts job against workspace B → 403, no debit</td></tr>
+  <tr><td><code>test-cross-workspace-asset.ts</code></td><td>#3</td><td>Real minted asset from A referenced in B's commit → 403</td></tr>
+  <tr><td><code>test-refund-concurrency.ts</code></td><td>#5</td><td>10 concurrent refundJob() → exactly 1 refund, DB-enforced</td></tr>
+</table>
+
+<div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 9px; color: #999;">
+  Phork Phase 1.1 Hardening Verification — Generated 2026-02-24 — Commits 4e58f66 → 304a2b2 — github.com/ProperPrompter/phork
+</div>
+
+</body>
+</html>
