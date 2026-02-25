@@ -1,13 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { eq, and, desc } from 'drizzle-orm';
-import { projects, commits, projectHeads, workspaceMembers, assets } from '@phork/db';
-import type { TimelineSnapshot } from '@phork/shared';
+import { projects, commits, projectHeads, workspaceMembers, assets, sourceReleases, sourceReleaseAssets, analyticsEvents } from '@phork/db';
+import type { TimelineSnapshot, ShotSnapshot } from '@phork/shared';
+import { TEMPLATES, getTemplate } from '../lib/templates';
 
 const createProjectSchema = z.object({
   workspaceId: z.string().uuid(),
   name: z.string().min(1),
   description: z.string().optional(),
+  templateId: z.string().optional(),
 });
 
 const createCommitSchema = z.object({
@@ -29,11 +31,18 @@ const createCommitSchema = z.object({
 const forkProjectSchema = z.object({
   fromCommitId: z.string().uuid(),
   name: z.string().min(1),
+  truncateAtShotIndex: z.number().int().min(0).optional(),
+  sourceReleaseId: z.string().uuid().optional(),
 });
 
 export async function projectRoutes(app: FastifyInstance) {
-  // All project routes require auth
+  // All project routes require auth (except templates)
   app.addHook('preHandler', (app as any).authenticate);
+
+  // GET /projects/templates — list available templates (no sensitive data)
+  app.get('/templates', async () => {
+    return { data: TEMPLATES };
+  });
 
   // Create project
   app.post('/', async (request: any, reply) => {
@@ -56,14 +65,35 @@ export async function projectRoutes(app: FastifyInstance) {
       createdBy: userId,
     }).returning();
 
-    // Create initial empty commit
-    const emptySnapshot: TimelineSnapshot = { timeline: [] };
+    // Create initial commit — use template if provided, otherwise empty
+    let initialSnapshot: TimelineSnapshot = { timeline: [] };
+    let commitMessage = 'Initial commit';
+
+    if (body.templateId) {
+      const template = getTemplate(body.templateId);
+      if (!template) {
+        return reply.status(400).send({ error: 'Bad Request', message: `Unknown template: ${body.templateId}`, statusCode: 400 });
+      }
+      initialSnapshot = {
+        timeline: template.shots.map((s) => ({
+          shot_id: s.shot_id,
+          visual_asset_id: null,
+          audio_asset_id: null,
+          duration_ms: s.duration_ms,
+          trim_in_ms: 0,
+          trim_out_ms: s.duration_ms,
+          subtitle: s.subtitle,
+        })),
+      };
+      commitMessage = `Initial commit from template: ${template.name}`;
+    }
+
     const [commit] = await db.insert(commits).values({
       projectId: project.id,
       parentCommitId: null,
-      message: 'Initial commit',
+      message: commitMessage,
       createdBy: userId,
-      snapshot: emptySnapshot,
+      snapshot: initialSnapshot,
     }).returning();
 
     // Set project head
@@ -271,6 +301,22 @@ export async function projectRoutes(app: FastifyInstance) {
       lastNewCommitId = newCommit.id;
     }
 
+    // If truncateAtShotIndex is specified, truncate the final commit's timeline
+    if (body.truncateAtShotIndex !== undefined && lastNewCommitId) {
+      const [lastCommit] = await db.select().from(commits).where(eq(commits.id, lastNewCommitId)).limit(1);
+      if (lastCommit) {
+        const snap = lastCommit.snapshot as TimelineSnapshot;
+        if (snap.timeline && body.truncateAtShotIndex < snap.timeline.length) {
+          const truncatedSnapshot: TimelineSnapshot = {
+            timeline: snap.timeline.slice(0, body.truncateAtShotIndex + 1),
+          };
+          await db.update(commits)
+            .set({ snapshot: truncatedSnapshot })
+            .where(eq(commits.id, lastNewCommitId));
+        }
+      }
+    }
+
     // Set head to the last copied commit
     if (lastNewCommitId) {
       await db.insert(projectHeads).values({
@@ -279,10 +325,40 @@ export async function projectRoutes(app: FastifyInstance) {
       });
     }
 
+    // Handle source release: copy release reference for the forked project
+    let releaseUsed = null;
+    if (body.sourceReleaseId) {
+      const [release] = await db.select().from(sourceReleases)
+        .where(and(eq(sourceReleases.id, body.sourceReleaseId), eq(sourceReleases.projectId, sourceProjectId)))
+        .limit(1);
+      if (release) {
+        releaseUsed = { releaseId: release.id, releaseName: release.name };
+
+        // Record analytics
+        await db.insert(analyticsEvents).values({
+          workspaceId: sourceProject.workspaceId,
+          userId,
+          projectId: sourceProjectId,
+          event: 'release_used',
+          metadata: { releaseId: release.id, forkProjectId: newProject.id },
+        });
+      }
+    }
+
+    // Record fork_created analytics
+    await db.insert(analyticsEvents).values({
+      workspaceId: sourceProject.workspaceId,
+      userId,
+      projectId: sourceProjectId,
+      event: 'fork_created',
+      metadata: { forkProjectId: newProject.id, fromCommitId: body.fromCommitId },
+    });
+
     return reply.status(201).send({
       project: newProject,
       headCommitId: lastNewCommitId,
       forkedFrom: { projectId: sourceProjectId, commitId: body.fromCommitId },
+      releaseUsed,
     });
   });
 }

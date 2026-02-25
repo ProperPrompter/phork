@@ -7,6 +7,7 @@ import {
   integer,
   primaryKey,
   uniqueIndex,
+  index,
 } from 'drizzle-orm/pg-core';
 
 // ──────────────────────────────────────────────
@@ -181,3 +182,78 @@ export const safetyEvents = pgTable('safety_events', {
   createdAt: timestamp('created_at').defaultNow(),
   details: jsonb('details'),
 });
+
+// ──────────────────────────────────────────────
+// Published Renders (Phase 2A)
+// ──────────────────────────────────────────────
+
+export const publishedRenders = pgTable('published_renders', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  projectId: uuid('project_id')
+    .references(() => projects.id)
+    .notNull(),
+  renderAssetId: uuid('render_asset_id')
+    .references(() => assets.id)
+    .notNull(),
+  commitId: uuid('commit_id')
+    .references(() => commits.id)
+    .notNull(),
+  title: text('title'),
+  description: text('description'),
+  shareToken: text('share_token').unique(),
+  publishedAt: timestamp('published_at').defaultNow(),
+  publishedBy: uuid('published_by')
+    .references(() => users.id)
+    .notNull(),
+}, (table) => ({
+  projectIdx: uniqueIndex('published_renders_project_idx').on(table.projectId),
+}));
+
+// ──────────────────────────────────────────────
+// Source Releases (Phase 2A)
+// ──────────────────────────────────────────────
+
+export const sourceReleases = pgTable('source_releases', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  projectId: uuid('project_id')
+    .references(() => projects.id)
+    .notNull(),
+  name: text('name').notNull(),
+  includeMode: text('include_mode').notNull(), // 'used_only' | 'used_plus_selected'
+  license: text('license').notNull(), // ForkLicense values
+  createdAt: timestamp('created_at').defaultNow(),
+  createdBy: uuid('created_by')
+    .references(() => users.id)
+    .notNull(),
+});
+
+export const sourceReleaseAssets = pgTable(
+  'source_release_assets',
+  {
+    sourceReleaseId: uuid('source_release_id')
+      .references(() => sourceReleases.id)
+      .notNull(),
+    assetId: uuid('asset_id')
+      .references(() => assets.id)
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.sourceReleaseId, table.assetId] }),
+  }),
+);
+
+// ──────────────────────────────────────────────
+// Analytics Events (Phase 2A)
+// ──────────────────────────────────────────────
+
+export const analyticsEvents = pgTable('analytics_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  workspaceId: uuid('workspace_id').references(() => workspaces.id),
+  userId: uuid('user_id').references(() => users.id),
+  projectId: uuid('project_id').references(() => projects.id),
+  event: text('event').notNull(), // 'viewer_open' | 'fork_click' | 'fork_created' | 'fork_rendered' | 'release_used'
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  projectEventIdx: index('analytics_project_event_idx').on(table.projectId, table.event),
+}));

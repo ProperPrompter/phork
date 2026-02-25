@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
 import { useProjectStore } from '@/stores/project';
@@ -10,8 +10,13 @@ import { ShotEditor } from '@/components/ShotEditor';
 import { PreviewPlayer } from '@/components/PreviewPlayer';
 import { ProvenancePanel } from '@/components/ProvenancePanel';
 import { ForkDialog } from '@/components/ForkDialog';
+import { PublishDialog } from '@/components/PublishDialog';
+import { ReleaseDialog } from '@/components/ReleaseDialog';
+import { FolderNav, type FolderTab } from '@/components/FolderNav';
+import { AssetGrid } from '@/components/AssetGrid';
+import { UpstreamLibrary } from '@/components/UpstreamLibrary';
 import type { ShotSnapshot, TimelineSnapshot } from '@phork/shared';
-import { GitFork, Play, Save, ArrowLeft, Info } from 'lucide-react';
+import { GitFork, Play, Save, ArrowLeft, Info, Globe, Package, Eye } from 'lucide-react';
 
 export default function ProjectStudioPage() {
   const router = useRouter();
@@ -31,13 +36,29 @@ export default function ProjectStudioPage() {
   const [renderDownloadUrl, setRenderDownloadUrl] = useState<string | null>(null);
   const [showFork, setShowFork] = useState(false);
   const [showProvenance, setShowProvenance] = useState(false);
+  const [showPublish, setShowPublish] = useState(false);
+  const [showReleaseDialog, setShowReleaseDialog] = useState(false);
   const [credits, setCredits] = useState(0);
+  const [publishedRender, setPublishedRender] = useState<any>(null);
+
+  // Folder nav state
+  const [activeTab, setActiveTab] = useState<FolderTab>('timeline');
+  const [folderAssets, setFolderAssets] = useState<any[]>([]);
+  const [assetCounts, setAssetCounts] = useState({ used: 0, vault: 0, releases: 0, renders: 0 });
+  const [releases, setReleases] = useState<any[]>([]);
+  const [renderAssets, setRenderAssets] = useState<any[]>([]);
 
   useEffect(() => {
     if (!token) { router.push('/login'); return; }
     loadProject();
     loadCredits();
   }, [token, projectId]);
+
+  useEffect(() => {
+    if (activeTab !== 'timeline' && workspaceId) {
+      loadFolderData();
+    }
+  }, [activeTab, workspaceId, projectId]);
 
   const loadProject = async () => {
     try {
@@ -47,6 +68,11 @@ export default function ProjectStudioPage() {
       if (res.headCommit?.snapshot) {
         setShots((res.headCommit.snapshot as TimelineSnapshot).timeline || []);
       }
+      // Check if published
+      try {
+        const pub = await api.get(`/publish/${projectId}`);
+        setPublishedRender(pub.publishedRender);
+      } catch { /* not published */ }
     } catch (err) {
       console.error('Failed to load project:', err);
     } finally {
@@ -60,6 +86,27 @@ export default function ProjectStudioPage() {
       setCredits(res.balance);
     } catch (err) {
       console.error('Failed to load credits:', err);
+    }
+  };
+
+  const loadFolderData = async () => {
+    try {
+      if (activeTab === 'assets' || activeTab === 'vault') {
+        const res = await api.get(`/assets?workspaceId=${workspaceId}&projectId=${projectId}&classification=${activeTab === 'assets' ? 'used' : 'vault'}`);
+        setFolderAssets(res.data || []);
+        setAssetCounts((prev) => ({ ...prev, used: res.usedCount, vault: res.vaultCount }));
+      } else if (activeTab === 'releases') {
+        const res = await api.get(`/projects/${projectId}/releases`);
+        setReleases(res.data || []);
+        setAssetCounts((prev) => ({ ...prev, releases: (res.data || []).length }));
+      } else if (activeTab === 'renders') {
+        const res = await api.get(`/assets?workspaceId=${workspaceId}&classification=all`);
+        const renders = (res.data || []).filter((a: any) => a.type === 'render');
+        setRenderAssets(renders);
+        setAssetCounts((prev) => ({ ...prev, renders: renders.length }));
+      }
+    } catch (err) {
+      console.error('Failed to load folder data:', err);
     }
   };
 
@@ -86,14 +133,12 @@ export default function ProjectStudioPage() {
     setRenderAssetId(null);
     setRenderDownloadUrl(null);
     try {
-      // Save first
       await saveCommit();
       const res = await api.post('/jobs/render', {
         projectId,
         workspaceId,
         commitId: headCommit.id,
       });
-      // Poll for completion
       pollJob(res.id);
     } catch (err: any) {
       console.error('Render failed:', err);
@@ -142,7 +187,7 @@ export default function ProjectStudioPage() {
       subtitle: null,
     };
     addShot(newShot);
-    selectShot(shots.length); // Select the newly added shot
+    selectShot(shots.length);
   };
 
   if (loading) {
@@ -166,7 +211,7 @@ export default function ProjectStudioPage() {
             <span className="rounded-full bg-[var(--accent)]/20 px-2 py-0.5 text-xs text-[var(--accent)]">Forked</span>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="text-sm text-[var(--text-secondary)]">{credits} credits</span>
           <button
             onClick={() => setShowProvenance(!showProvenance)}
@@ -175,17 +220,39 @@ export default function ProjectStudioPage() {
             <Info size={14} /> Provenance
           </button>
           <button
+            onClick={() => setShowReleaseDialog(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)]"
+          >
+            <Package size={14} /> Release
+          </button>
+          <button
             onClick={() => setShowFork(true)}
             className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)]"
           >
             <GitFork size={14} /> Fork
           </button>
+          {publishedRender && (
+            <button
+              onClick={() => router.push(`/viewer/${projectId}`)}
+              className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)]"
+            >
+              <Eye size={14} /> View
+            </button>
+          )}
           <button
             onClick={saveCommit}
             disabled={saving}
             className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)] disabled:opacity-50"
           >
             <Save size={14} /> {saving ? 'Saving...' : 'Save'}
+          </button>
+          <button
+            onClick={() => setShowPublish(true)}
+            disabled={!renderAssetId}
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)] disabled:opacity-50"
+            title={renderAssetId ? 'Publish this render' : 'Render first to publish'}
+          >
+            <Globe size={14} /> Publish
           </button>
           <button
             onClick={startRender}
@@ -199,16 +266,55 @@ export default function ProjectStudioPage() {
 
       {/* Main Studio Layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel: Shot List */}
-        <div className="w-64 flex-shrink-0 overflow-y-auto border-r border-[var(--border-color)] bg-[var(--bg-secondary)]">
-          <ShotList
-            shots={shots}
-            selectedIndex={selectedShotIndex}
-            onSelect={selectShot}
-            onAdd={handleAddShot}
-            onRemove={removeShot}
-            onReorder={reorderShots}
-          />
+        {/* Left Panel: Folder Nav + Content */}
+        <div className="w-64 flex-shrink-0 flex flex-col overflow-hidden border-r border-[var(--border-color)] bg-[var(--bg-secondary)]">
+          <FolderNav activeTab={activeTab} onTabChange={setActiveTab} counts={assetCounts} />
+          <div className="flex-1 overflow-y-auto">
+            {activeTab === 'timeline' && (
+              <ShotList
+                shots={shots}
+                selectedIndex={selectedShotIndex}
+                onSelect={selectShot}
+                onAdd={handleAddShot}
+                onRemove={removeShot}
+                onReorder={reorderShots}
+              />
+            )}
+            {(activeTab === 'assets' || activeTab === 'vault') && (
+              <AssetGrid
+                assets={folderAssets}
+                emptyMessage={activeTab === 'assets' ? 'No used assets in timeline' : 'No unused assets in vault'}
+              />
+            )}
+            {activeTab === 'releases' && (
+              <div className="p-3">
+                {releases.length === 0 ? (
+                  <p className="text-center text-sm text-[var(--text-secondary)]">No releases yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {releases.map((r: any) => (
+                      <div key={r.id} className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-tertiary)] p-3 text-xs">
+                        <div className="font-medium">{r.name}</div>
+                        <div className="mt-0.5 text-[var(--text-secondary)]">
+                          {r.includeMode === 'used_only' ? 'Used only' : 'Used + extras'} — {r.assetCount} assets
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {activeTab === 'renders' && (
+              <AssetGrid assets={renderAssets} emptyMessage="No renders yet" />
+            )}
+            {/* Show upstream library for forked projects */}
+            {project?.parentProjectId && activeTab === 'timeline' && (
+              <UpstreamLibrary
+                parentProjectId={project.parentProjectId}
+                forkedFromCommitId={project.forkedFromCommitId || ''}
+              />
+            )}
+          </div>
         </div>
 
         {/* Center: Preview */}
@@ -247,7 +353,7 @@ export default function ProjectStudioPage() {
         )}
       </div>
 
-      {/* Fork Dialog */}
+      {/* Dialogs */}
       {showFork && (
         <ForkDialog
           projectId={projectId}
@@ -255,6 +361,32 @@ export default function ProjectStudioPage() {
           onForked={(newProjectId) => {
             setShowFork(false);
             router.push(`/studio/${newProjectId}`);
+          }}
+        />
+      )}
+
+      {showPublish && renderAssetId && headCommit && (
+        <PublishDialog
+          projectId={projectId}
+          renderAssetId={renderAssetId}
+          commitId={headCommit.id}
+          projectName={project?.name || 'Untitled'}
+          onClose={() => setShowPublish(false)}
+          onPublished={(pub) => {
+            setPublishedRender(pub);
+            setShowPublish(false);
+          }}
+        />
+      )}
+
+      {showReleaseDialog && (
+        <ReleaseDialog
+          projectId={projectId}
+          workspaceId={workspaceId!}
+          onClose={() => setShowReleaseDialog(false)}
+          onCreated={(release) => {
+            setReleases((prev) => [release, ...prev]);
+            setShowReleaseDialog(false);
           }}
         />
       )}

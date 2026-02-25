@@ -53,6 +53,57 @@ export interface ProvenanceManifest {
   }>;
 }
 
+// ── Phase 2A Types ──
+export type IncludeMode = 'used_only' | 'used_plus_selected';
+export type AnalyticsEvent = 'viewer_open' | 'fork_click' | 'fork_created' | 'fork_rendered' | 'release_used';
+
+export interface PublishedRender {
+  id: string;
+  projectId: string;
+  renderAssetId: string;
+  commitId: string;
+  title: string | null;
+  description: string | null;
+  shareToken: string | null;
+  publishedAt: string;
+  publishedBy: string;
+}
+
+export interface SourceRelease {
+  id: string;
+  projectId: string;
+  name: string;
+  includeMode: IncludeMode;
+  license: ForkLicense;
+  createdAt: string;
+  createdBy: string;
+  assetCount?: number;
+  assets?: AssetSummary[];
+}
+
+export interface AssetSummary {
+  id: string;
+  type: AssetType;
+  mimeType: string | null;
+  bytes: number | null;
+  durationMs: number | null;
+  width: number | null;
+  height: number | null;
+}
+
+export interface TemplateDefinition {
+  id: string;
+  name: string;
+  description: string;
+  defaultAspectRatio: string;
+  shots: Array<{
+    shot_id: string;
+    duration_ms: number;
+    subtitle: string | null;
+    label: string;
+  }>;
+}
+
 // ── API Types ──
 export interface ApiError {
   error: string;

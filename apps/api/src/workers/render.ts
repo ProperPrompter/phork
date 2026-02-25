@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { jobs, commits, assets } from '@phork/db';
+import { jobs, commits, assets, projects, analyticsEvents } from '@phork/db';
 import type { Database } from '@phork/db';
 import type { TimelineSnapshot, ProvenanceManifest } from '@phork/shared';
 import { signMintReceipt } from '../lib/mint';
@@ -146,6 +146,23 @@ export async function processRenderJob(db: Database, jobId: string) {
       result: { assetId: renderAssetId, commitId: request.commitId },
       updatedAt: new Date(),
     }).where(eq(jobs.id, jobId));
+
+    // Record fork_rendered analytics if this is a forked project
+    try {
+      if (!job.projectId) throw new Error('No projectId');
+      const [proj] = await db.select().from(projects).where(eq(projects.id, job.projectId)).limit(1);
+      if (proj?.parentProjectId) {
+        await db.insert(analyticsEvents).values({
+          workspaceId: job.workspaceId,
+          userId: job.userId,
+          projectId: proj.parentProjectId, // attribute to the source project
+          event: 'fork_rendered',
+          metadata: { forkProjectId: proj.id, renderAssetId },
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to record fork_rendered analytics:', e);
+    }
 
   } catch (error: any) {
     console.error(`Render job ${jobId} failed:`, error);

@@ -20,6 +20,8 @@ export default function StudioPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
+  const [templateId, setTemplateId] = useState('');
+  const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +30,17 @@ export default function StudioPage() {
       return;
     }
     loadProjects();
+    loadTemplates();
   }, [token]);
+
+  const loadTemplates = async () => {
+    try {
+      const res = await api.get('/projects/templates');
+      setTemplates(res.data || []);
+    } catch (err) {
+      console.error('Failed to load templates:', err);
+    }
+  };
 
   const loadProjects = async () => {
     try {
@@ -44,10 +56,9 @@ export default function StudioPage() {
   const createProject = async () => {
     if (!newName.trim()) return;
     try {
-      const res = await api.post('/projects', {
-        workspaceId,
-        name: newName.trim(),
-      });
+      const body: any = { workspaceId, name: newName.trim() };
+      if (templateId) body.templateId = templateId;
+      const res = await api.post('/projects', body);
       setNewName('');
       setShowCreate(false);
       router.push(`/studio/${res.project.id}`);
@@ -98,6 +109,36 @@ export default function StudioPage() {
         {showCreate && (
           <div className="mb-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-6">
             <h3 className="mb-4 text-lg font-medium">Create New Project</h3>
+
+            {/* Template selector */}
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              <button
+                onClick={() => setTemplateId('')}
+                className="rounded-lg border p-3 text-left text-sm transition-colors"
+                style={{
+                  borderColor: !templateId ? 'var(--accent)' : 'var(--border-color)',
+                  backgroundColor: !templateId ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-tertiary)',
+                }}
+              >
+                <div className="font-medium">Blank Project</div>
+                <div className="mt-0.5 text-xs text-[var(--text-secondary)]">Start from scratch</div>
+              </button>
+              {templates.map((t: any) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTemplateId(t.id)}
+                  className="rounded-lg border p-3 text-left text-sm transition-colors"
+                  style={{
+                    borderColor: templateId === t.id ? 'var(--accent)' : 'var(--border-color)',
+                    backgroundColor: templateId === t.id ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-tertiary)',
+                  }}
+                >
+                  <div className="font-medium">{t.name}</div>
+                  <div className="mt-0.5 text-xs text-[var(--text-secondary)]">{t.shots.length} shots, {t.defaultAspectRatio}</div>
+                </button>
+              ))}
+            </div>
+
             <div className="flex gap-3">
               <input
                 type="text"
@@ -115,7 +156,7 @@ export default function StudioPage() {
                 Create
               </button>
               <button
-                onClick={() => setShowCreate(false)}
+                onClick={() => { setShowCreate(false); setTemplateId(''); }}
                 className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-sm hover:bg-[var(--bg-tertiary)]"
               >
                 Cancel

@@ -8,6 +8,9 @@ import { projectRoutes } from './routes/projects';
 import { jobRoutes } from './routes/jobs';
 import { creditRoutes } from './routes/credits';
 import { assetRoutes } from './routes/assets';
+import { publishRoutes } from './routes/publish';
+import { releaseRoutes } from './routes/releases';
+import { analyticsRoutes } from './routes/analytics';
 
 const app = Fastify({ logger: true });
 
@@ -35,6 +38,9 @@ async function start() {
   await app.register(jobRoutes, { prefix: '/jobs' });
   await app.register(creditRoutes, { prefix: '/credits' });
   await app.register(assetRoutes, { prefix: '/assets' });
+  await app.register(publishRoutes, { prefix: '/publish' });
+  await app.register(releaseRoutes, { prefix: '/projects' });
+  await app.register(analyticsRoutes, { prefix: '/analytics' });
 
   // Health check
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
