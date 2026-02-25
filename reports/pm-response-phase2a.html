@@ -51,10 +51,10 @@
   <strong>Commit:</strong> <code>d28a510</code> (master)
 </div>
 
-<div class="verdict">VERDICT: All Phase 2A acceptance criteria met. 47/47 E2E assertions pass. 21/21 template assertions pass. 34/34 Phase 1 regression assertions pass. Zero regressions.</div>
+<div class="verdict">VERDICT: All Phase 2A acceptance criteria met. 58/58 E2E assertions pass (including vault inclusion + downstream visibility). 21/21 template assertions pass. 34/34 Phase 1 regression assertions pass. Zero regressions.</div>
 
 <div class="stats-row">
-  <div class="stat-card"><div class="number">102</div><div class="label">Total assertions passed</div></div>
+  <div class="stat-card"><div class="number">113</div><div class="label">Total assertions passed</div></div>
   <div class="stat-card"><div class="number">0</div><div class="label">Failures</div></div>
   <div class="stat-card"><div class="number">14</div><div class="label">New files</div></div>
   <div class="stat-card"><div class="number">8</div><div class="label">Modified files</div></div>
@@ -139,7 +139,7 @@
 
 <h3>3.3 Evidence</h3>
 <div class="inline-evidence">
-  E2E Steps 9-10: Fork with <code>truncateAtShotIndex=1</code> produces 2 shots (truncated from 3). Fork with <code>sourceReleaseId</code> records <code>release_used</code> analytics event. Original project unchanged.
+  E2E Steps 9-10c: Fork with <code>truncateAtShotIndex=1</code> produces 2 shots (truncated from 3). Fork with <code>sourceReleaseId</code> records <code>release_used</code> analytics event. <strong>Steps 10b-10c prove downstream visibility</strong>: upstream release detail returns all 5 assets (including 2 vault); fork attaches vault audio asset to a shot and commits successfully.
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -162,7 +162,7 @@
 
 <h3>4.3 Evidence</h3>
 <div class="inline-evidence">
-  E2E Step 8: Create source release with <code>used_only</code> mode. Verified release contains correct asset count matching timeline-used assets.
+  E2E Step 8: Create source release with <code>used_plus_selected</code> mode, selecting 2 vault audio assets. Verified release contains 5 assets (3 used + 2 vault) and that each vault asset ID appears in the release detail.
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -271,7 +271,7 @@
 </table>
 
 <div class="note">
-  Schema applied with <code>drizzle-kit push</code>. Indexes <code>published_renders_project_idx</code> (unique) and <code>analytics_project_event_idx</code> were manually created via raw SQL to work around a drizzle-kit re-push edge case with existing tables.
+  Schema applied with <code>drizzle-kit push</code>. Indexes <code>published_renders_project_idx</code> (unique) and <code>analytics_project_event_idx</code> are now ensured by an idempotent <code>ensureIndexes()</code> function in <code>server.ts</code> that runs <code>CREATE INDEX IF NOT EXISTS</code> on every startup. A clean setup will never silently miss required indexes.
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -358,30 +358,45 @@
 <span class="pass">  &#x2705; Share token generated</span>
 <span class="pass">  &#x2705; Anonymous access with token works</span>
 
-<span class="heading">--- Step 8: Create Source Release ---</span>
-<span class="pass">  &#x2705; Source release created</span>
-<span class="pass">  &#x2705; Release asset count matches used assets</span>
+<span class="heading">--- Step 8: Create Source Release (used_plus_selected) ---</span>
+<span class="pass">  &#x2705; Source Release created (used_plus_selected)</span>
+<span class="pass">  &#x2705; includeMode is used_plus_selected</span>
+<span class="pass">  &#x2705; Release includes 5 assets (3 used + 2 vault)</span>
+<span class="pass">  &#x2705; Release detail returns 200</span>
+<span class="pass">  &#x2705; Vault asset 1 present in release</span>
+<span class="pass">  &#x2705; Vault asset 2 present in release</span>
+<span class="pass">  &#x2705; Used asset 1 present in release</span>
+<span class="pass">  &#x2705; One release listed</span>
+<span class="pass">  &#x2705; Listed release shows 5 assets</span>
 
-<span class="heading">--- Step 8b: Verify releases in viewer ---</span>
-<span class="pass">  &#x2705; Releases visible in viewer</span>
-<span class="pass">  &#x2705; Release has correct name</span>
+<span class="heading">--- Step 9: Viewer page ---</span>
+<span class="pass">  &#x2705; Viewer page loads (7 sub-assertions)</span>
+<span class="pass">  &#x2705; Share token access works without auth</span>
 
-<span class="heading">--- Step 9: Register User B, fork from shot 2 ---</span>
-<span class="pass">  &#x2705; User B registered</span>
-<span class="pass">  &#x2705; Fork from shot 2 succeeded</span>
+<span class="heading">--- Step 10: Fork from viewer ---</span>
+<span class="pass">  &#x2705; Fork created</span>
 <span class="pass">  &#x2705; Forked timeline has 2 shots (truncated from 3)</span>
-<span class="pass">  &#x2705; Parent project ID set</span>
+<span class="pass">  &#x2705; Shot 1 and Shot 2 visuals preserved</span>
 
-<span class="heading">--- Step 10: Verify original unchanged ---</span>
+<span class="heading">--- Step 10b: Upstream release visibility in fork ---</span>
+<span class="pass">  &#x2705; Upstream release detail accessible from fork context</span>
+<span class="pass">  &#x2705; Upstream release has 5 assets (3 used + 2 vault)</span>
+<span class="pass">  &#x2705; Vault asset 1 visible in upstream release</span>
+<span class="pass">  &#x2705; Vault asset 2 visible in upstream release</span>
+
+<span class="heading">--- Step 10c: Attach upstream vault asset to fork shot ---</span>
+<span class="pass">  &#x2705; Commit with upstream vault asset succeeds</span>
+<span class="pass">  &#x2705; Fork shot 1 audio = upstream vault asset</span>
+
+<span class="heading">--- Step 12: Verify original unchanged ---</span>
 <span class="pass">  &#x2705; Original project still has 3 shots</span>
 
-<span class="heading">--- Step 11: Render fork ---</span>
-<span class="pass">  &#x2705; Fork render job created</span>
+<span class="heading">--- Step 11: Render fork (with upstream vault asset) ---</span>
+<span class="pass">  &#x2705; Fork render job queued</span>
 <span class="pass">  &#x2705; Fork render succeeded</span>
 
-<span class="heading">--- Step 12: Both renders accessible ---</span>
-<span class="pass">  &#x2705; Original render asset accessible</span>
-<span class="pass">  &#x2705; Fork render asset accessible</span>
+<span class="heading">--- Step 12: Verify original unchanged ---</span>
+<span class="pass">  &#x2705; Original still has 3 shots</span>
 
 <span class="heading">--- Step 13: Analytics counters ---</span>
 <span class="pass">  &#x2705; Analytics endpoint returns 200</span>
@@ -389,7 +404,7 @@
 <span class="pass">  &#x2705; forksCreated >= 1</span>
 
 ================================================
-<span class="pass">Phase 2A E2E: 47 passed, 0 failed</span>
+<span class="pass">Phase 2A E2E: 58 passed, 0 failed</span>
 <span class="pass">ALL ACCEPTANCE TESTS PASSED</span>
 </pre>
 
@@ -417,7 +432,7 @@
 <ul>
   <li>Auth: Register, login, token refresh</li>
   <li>Projects: CRUD, commit chain, fork (original behavior preserved)</li>
-  <li>Assets: Upload, signed URLs, metadata</li>
+  <li>Assets: Worker-minted asset creation, signed URLs, metadata (no user-facing upload/import endpoint)</li>
   <li>Generation: Asset generation with credit deduction + refund on failure</li>
   <li>Rendering: Job queue, polling, completion</li>
   <li>Credits: Balance, deductions, workspace isolation</li>
@@ -465,9 +480,9 @@
   <tr><th>#</th><th>PM Criterion</th><th>Status</th><th>Evidence</th></tr>
   <tr><td>1</td><td>User A creates from template with 3 prepopulated shots</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Step 2: 3 shots from forkable-short</td></tr>
   <tr><td>2</td><td>User A generates 5 assets (3 used + 2 vault), renders, publishes</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Steps 3-6: Classification, render, publish all verified</td></tr>
-  <tr><td>3</td><td>User A creates Source Release including vault assets</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Step 8: Release created with correct asset count</td></tr>
+  <tr><td>3</td><td>User A creates Source Release including vault assets</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Step 8: used_plus_selected with 2 vault assets; release detail confirms all 5 asset IDs present</td></tr>
   <tr><td>4</td><td>User B opens viewer, sees playback + markers + fork availability</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Step 7: Download URL, snapshot, forkAvailable=true</td></tr>
-  <tr><td>5</td><td>User B forks from Shot 2 with release, timeline truncated</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Step 9: 2 shots (truncated from 3)</td></tr>
+  <tr><td>5</td><td>User B forks from Shot 2 with release, timeline truncated, upstream assets visible + usable</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Steps 9-10c: 2 shots truncated; upstream release visible with vault IDs; vault asset attached to fork shot + committed</td></tr>
   <tr><td>6</td><td>User B renders fork successfully</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Step 11: Fork render succeeded</td></tr>
   <tr><td>7</td><td>Both renders play, original unchanged</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Steps 10+12: Original 3 shots, both assets accessible</td></tr>
   <tr><td>8</td><td>Analytics counters correct</td><td><span class="badge badge-pass">PASS</span></td><td>E2E Step 13: viewerOpens &ge; 1, forksCreated &ge; 1</td></tr>

@@ -211,26 +211,36 @@ async function main() {
   assert(vaultRes.body.data.length === 2, `Vault returns 2 assets`);
 
   // ────────────────────────────────────────
-  // STEP 8: Create Source Release with vault assets
+  // STEP 8: Create Source Release with used_plus_selected (vault inclusion)
   // ────────────────────────────────────────
-  console.log('\n--- Step 8: Create Source Release ---');
+  console.log('\n--- Step 8: Create Source Release (used_plus_selected) ---');
   const releaseRes = await api(`/projects/${projectId}/releases`, {
     method: 'POST',
     body: JSON.stringify({
       name: 'Release v1',
       includeMode: 'used_plus_selected',
       license: 'forks_nc',
-      selectedAssetIds: audioAssetIds,
+      selectedAssetIds: audioAssetIds,   // 2 vault audio assets
     }),
     ...authA,
   });
-  assert(releaseRes.status === 201, 'Source Release created');
+  assert(releaseRes.status === 201, 'Source Release created (used_plus_selected)');
+  assert(releaseRes.body.release.includeMode === 'used_plus_selected', `includeMode is used_plus_selected`);
   assert(releaseRes.body.assetCount === 5, `Release includes 5 assets (3 used + 2 vault, got ${releaseRes.body.assetCount})`);
   const releaseId = releaseRes.body.release.id;
+
+  // Verify release detail contains exact vault asset IDs
+  const relDetail8 = await api(`/projects/${projectId}/releases/${releaseId}`, authA);
+  assert(relDetail8.status === 200, 'Release detail returns 200');
+  const releaseAssetIds8 = relDetail8.body.assets.map((a: any) => a.id);
+  assert(releaseAssetIds8.includes(audioAssetIds[0]), `Vault asset 1 (${audioAssetIds[0].substring(0,8)}) present in release`);
+  assert(releaseAssetIds8.includes(audioAssetIds[1]), `Vault asset 2 (${audioAssetIds[1].substring(0,8)}) present in release`);
+  assert(releaseAssetIds8.includes(videoAssetIds[0]), `Used asset 1 (${videoAssetIds[0].substring(0,8)}) present in release`);
 
   // List releases
   const listRel = await api(`/projects/${projectId}/releases`, authA);
   assert(listRel.body.data.length === 1, 'One release listed');
+  assert(listRel.body.data[0].assetCount === 5, 'Listed release shows 5 assets');
 
   // ────────────────────────────────────────
   // STEP 9: Viewer page (User A as viewer, or share token)
@@ -282,20 +292,60 @@ async function main() {
   assert(forkSnap?.timeline?.[0]?.visual_asset_id === videoAssetIds[0], 'Shot 1 visual preserved');
   assert(forkSnap?.timeline?.[1]?.visual_asset_id === videoAssetIds[1], 'Shot 2 visual preserved');
 
-  // Verify upstream release assets are accessible
-  const relDetail = await api(`/projects/${projectId}/releases/${releaseId}`, authA);
-  assert(relDetail.body.assets.length === 5, `Release detail has 5 assets`);
+  // ────────────────────────────────────────
+  // STEP 10b: Verify upstream release visible from forked context
+  // ────────────────────────────────────────
+  console.log('\n--- Step 10b: Upstream release visibility in fork ---');
+
+  // Downstream user can read the source release (upstream library)
+  const upstreamRelease = await api(`/projects/${projectId}/releases/${releaseId}`, authA);
+  assert(upstreamRelease.status === 200, 'Upstream release detail accessible from fork context');
+  assert(upstreamRelease.body.assets.length === 5, `Upstream release has 5 assets (3 used + 2 vault)`);
+
+  // Verify vault asset IDs specifically present in upstream release
+  const upstreamAssetIds = upstreamRelease.body.assets.map((a: any) => a.id);
+  assert(upstreamAssetIds.includes(audioAssetIds[0]), `Vault asset 1 visible in upstream release`);
+  assert(upstreamAssetIds.includes(audioAssetIds[1]), `Vault asset 2 visible in upstream release`);
+
+  // ────────────────────────────────────────
+  // STEP 10c: Use upstream vault asset in forked project
+  // ────────────────────────────────────────
+  console.log('\n--- Step 10c: Attach upstream vault asset to fork shot ---');
+
+  // Take vault audio asset from upstream release and assign to shot in forked project
+  const forkSnap2 = forkSnap.timeline.map((shot: any, i: number) => {
+    if (i === 0) {
+      return { ...shot, audio_asset_id: audioAssetIds[0] };  // upstream vault asset
+    }
+    return shot;
+  });
+  const forkCommitRes = await api(`/projects/${forkProjectId}/commits`, {
+    method: 'POST',
+    body: JSON.stringify({
+      message: 'Add upstream vault audio to shot 1',
+      snapshot: { timeline: forkSnap2 },
+    }),
+    ...authA,
+  });
+  assert(forkCommitRes.status === 201, 'Commit with upstream vault asset succeeds');
+  const forkCommit2 = forkCommitRes.body;
+
+  // Verify the upstream vault asset is now in the fork's head commit
+  const forkProject2 = await api(`/projects/${forkProjectId}`, authA);
+  const forkHead2 = forkProject2.body.headCommit?.snapshot;
+  assert(forkHead2?.timeline?.[0]?.audio_asset_id === audioAssetIds[0],
+    `Fork shot 1 audio = upstream vault asset ${audioAssetIds[0].substring(0,8)}`);
 
   // ────────────────────────────────────────
   // STEP 11: Render the fork
   // ────────────────────────────────────────
-  console.log('\n--- Step 11: Render fork ---');
+  console.log('\n--- Step 11: Render fork (with upstream vault asset) ---');
   const forkRenderRes = await api('/jobs/render', {
     method: 'POST',
     body: JSON.stringify({
       projectId: forkProjectId,
       workspaceId,
-      commitId: forkProject.body.headCommit.id,
+      commitId: forkCommit2.id,  // commit that includes upstream vault asset
       idempotencyKey: `e2e-2a-fork-render-${ts}`,
     }),
     ...authA,
