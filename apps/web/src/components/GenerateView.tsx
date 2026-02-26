@@ -42,6 +42,7 @@ export function GenerateView({ projectId, workspaceId, onCreditsChange, onUseInT
             <UpstreamLibrary
               parentProjectId={project.parentProjectId}
               forkedFromCommitId={project.forkedFromCommitId || ''}
+              onUseInTimeline={onUseInTimeline}
             />
           </div>
         )}

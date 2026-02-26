@@ -5,7 +5,7 @@ export interface GenerationJob {
   id: string;
   type: 'video' | 'audio' | 'image';
   modelId: string;
-  status: 'queued' | 'running' | 'succeeded' | 'failed';
+  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'blocked';
   prompt: string;
   assetId: string | null;
   feedKey: string;                    // content-based key (prompt + params hash)

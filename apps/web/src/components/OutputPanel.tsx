@@ -83,7 +83,7 @@ export function OutputPanel({ projectId, workspaceId, onUseInTimeline }: OutputP
 
   const hasJobs = activeJobs.length > 0;
   const hasCompletedJobs = activeJobs.some(
-    (j) => j.status === 'succeeded' || j.status === 'failed',
+    (j) => j.status === 'succeeded' || j.status === 'failed' || j.status === 'blocked',
   );
 
   return (

@@ -5,6 +5,7 @@ import { useProjectStore } from '@/stores/project';
 import { PreviewPlayer } from './PreviewPlayer';
 import { TimelineTrack } from './TimelineTrack';
 import { LibraryPanel } from './LibraryPanel';
+import { ShotPropertiesPanel } from './ShotPropertiesPanel';
 import { Save, Play, Loader2, ZoomIn, ZoomOut, GripHorizontal } from 'lucide-react';
 import type { ShotSnapshot } from '@phork/shared';
 
@@ -26,7 +27,7 @@ export function TimelineView({
 }: TimelineViewProps) {
   const {
     shots, selectedShotIndex, zoomLevel, playheadMs, tracks, timelineHeight,
-    selectShot, addShot, removeShot, reorderShots,
+    selectShot, addShot, removeShot, updateShot, reorderShots,
     setZoomLevel, setPlayheadMs, setActiveSection,
     addTrack, removeTrack, setTimelineHeight,
   } = useProjectStore();
@@ -64,6 +65,12 @@ export function TimelineView({
   }, [addShot, selectShot, shots.length]);
 
   const handleSwitchToGenerate = useCallback(() => {
+    setActiveSection('generate');
+  }, [setActiveSection]);
+
+  /** Called when user clicks "Assign" for a visual/audio slot in ShotPropertiesPanel */
+  const handleAssignAsset = useCallback((type: 'video' | 'audio') => {
+    // Switch to the Generate view so the user can pick from library / upstream
     setActiveSection('generate');
   }, [setActiveSection]);
 
@@ -197,6 +204,16 @@ export function TimelineView({
               onSwitchToGenerate={handleSwitchToGenerate}
             />
           </div>
+
+          {/* Shot Properties Panel (shown when a shot is selected) */}
+          {selectedShotIndex !== null && shots[selectedShotIndex] && (
+            <ShotPropertiesPanel
+              shot={shots[selectedShotIndex]}
+              index={selectedShotIndex}
+              onUpdate={updateShot}
+              onAssignAsset={handleAssignAsset}
+            />
+          )}
         </div>
       </div>
 

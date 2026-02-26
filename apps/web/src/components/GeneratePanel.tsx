@@ -272,9 +272,10 @@ export function GeneratePanel({ projectId, workspaceId, onCreditsChange, onGener
             onGenerated();
             onCreditsChange();
           })
-          .catch(() => {
+          .catch((err: any) => {
+            const isBlocked = err?.message?.includes('blocked');
             updateJob(jobRes.id, {
-              status: 'failed',
+              status: isBlocked ? 'blocked' : 'failed',
               completedAt: Date.now(),
             });
           });

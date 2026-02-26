@@ -167,15 +167,7 @@ export function TimelineTrack({
       )}
       <span className="truncate">{track.label}</span>
 
-      {/* Remove track (only if more than default 2) */}
-      {tracks.length > 2 && (
-        <button
-          onClick={() => onRemoveTrack(track.id)}
-          className="ml-auto hidden group-hover:flex h-4 w-4 items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--error)] transition-colors"
-        >
-          <X size={9} />
-        </button>
-      )}
+      {/* Track remove button hidden — capped to 1 video + 1 audio for Phase 2A */}
     </div>
   );
 
@@ -282,17 +274,8 @@ export function TimelineTrack({
           style={{ width: 'var(--track-label-width)' }}
         >
           <div className="my-auto">
-            {/* Add video track row */}
-            <div className="flex items-center justify-center border-b border-dashed border-[var(--border-color)]/30" style={{ height: '22px' }}>
-              <button
-                onClick={() => onAddTrack('video')}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[8px] text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
-                title="Add video track"
-              >
-                <Plus size={8} />
-                <Video size={8} />
-              </button>
-            </div>
+            {/* Video track header spacer */}
+            <div className="border-b border-dashed border-[var(--border-color)]/30" style={{ height: '4px' }} />
 
             {/* Video track labels */}
             {videoTracks.map(renderTrackLabel)}
@@ -300,17 +283,8 @@ export function TimelineTrack({
             {/* Audio track labels */}
             {audioTracks.map(renderTrackLabel)}
 
-            {/* Add audio track row */}
-            <div className="flex items-center justify-center border-b border-dashed border-[var(--border-color)]/30" style={{ height: '22px' }}>
-              <button
-                onClick={() => onAddTrack('audio')}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[8px] text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
-                title="Add audio track"
-              >
-                <Plus size={8} />
-                <Music size={8} />
-              </button>
-            </div>
+            {/* Audio track footer spacer */}
+            <div className="border-b border-dashed border-[var(--border-color)]/30" style={{ height: '4px' }} />
           </div>
         </div>
 
@@ -321,8 +295,8 @@ export function TimelineTrack({
           onScroll={handleContentScroll}
         >
           <div className="my-auto relative" style={{ width: `${computedWidth}px`, minWidth: '100%' }}>
-            {/* Add video track spacer */}
-            <div className="border-b border-dashed border-[var(--border-color)]/30" style={{ height: '22px' }} />
+            {/* Video track header spacer */}
+            <div className="border-b border-dashed border-[var(--border-color)]/30" style={{ height: '4px' }} />
 
             {/* Video tracks */}
             {videoTracks.map(renderTrackRow)}
@@ -330,8 +304,8 @@ export function TimelineTrack({
             {/* Audio tracks */}
             {audioTracks.map(renderTrackRow)}
 
-            {/* Add audio track spacer */}
-            <div className="border-b border-dashed border-[var(--border-color)]/30" style={{ height: '22px' }} />
+            {/* Audio track footer spacer */}
+            <div className="border-b border-dashed border-[var(--border-color)]/30" style={{ height: '4px' }} />
 
             {/* Playhead (spans full height) */}
             <div className="absolute top-0 bottom-0 z-10 pointer-events-none" style={{ left: `${playheadPx}px` }}>

@@ -53,7 +53,7 @@ export function AssetGrid({ assets, selectable, selectedIds, onToggleSelect, emp
         return (
           <button
             key={asset.id}
-            onClick={() => selectable && onToggleSelect?.(asset.id)}
+            onClick={(e) => { e.stopPropagation(); if (selectable) onToggleSelect?.(asset.id); }}
             className="relative rounded-lg border p-3 text-left text-xs transition-colors"
             style={{
               borderColor: isSelected ? 'var(--accent)' : 'var(--border-color)',

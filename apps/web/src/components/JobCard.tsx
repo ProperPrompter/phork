@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, CheckCircle2, XCircle, Clock, Film, Volume2, Image } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, ShieldAlert, Clock, Film, Volume2, Image } from 'lucide-react';
 import type { GenerationJob } from '@/stores/studio';
 
 interface JobCardProps {
@@ -50,7 +50,7 @@ export function JobCard({ job, onClick }: JobCardProps) {
       className={`group relative flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-xl border transition-all ${
         job.status === 'succeeded'
           ? 'border-[var(--border-color)] bg-[var(--bg-tertiary)] hover:border-[var(--card-hover-border)] cursor-pointer'
-          : job.status === 'failed'
+          : job.status === 'failed' || job.status === 'blocked'
             ? 'border-[var(--error)]/30 bg-[var(--error-subtle)]'
             : 'border-[var(--border-color)] bg-[var(--bg-secondary)]'
       }`}
@@ -99,6 +99,19 @@ export function JobCard({ job, onClick }: JobCardProps) {
             <XCircle size={22} />
           </div>
           <span className="mt-2 text-xs font-medium text-[var(--error)]">Failed</span>
+        </>
+      )}
+
+      {job.status === 'blocked' && (
+        <>
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-full"
+            style={{ backgroundColor: 'var(--error-subtle)', color: 'var(--error)' }}
+          >
+            <ShieldAlert size={22} />
+          </div>
+          <span className="mt-2 text-xs font-medium text-[var(--error)]">Blocked</span>
+          <span className="mt-0.5 text-[9px] text-[var(--text-muted)]">Safety policy</span>
         </>
       )}
 
