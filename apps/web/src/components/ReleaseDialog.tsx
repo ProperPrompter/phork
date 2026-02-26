@@ -158,7 +158,7 @@ export function ReleaseDialog({ projectId, workspaceId, onClose, onCreated }: Re
               />
             </div>
 
-            {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && <p className="text-sm text-[var(--error)]">{error}</p>}
 
             <div className="flex gap-3">
               <button onClick={() => setStep(1)} className="rounded-lg border border-[var(--border-color)] px-4 py-2.5 text-sm hover:bg-[var(--bg-tertiary)]">Back</button>

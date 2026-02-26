@@ -113,7 +113,7 @@ export function ViewerForkDialog({ projectId, commitId, shotIndex, shotCount, re
             </div>
           )}
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-[var(--error)]">{error}</p>}
 
           <div className="flex gap-3">
             <button

@@ -86,7 +86,7 @@ export function PublishDialog({ projectId, renderAssetId, commitId, projectName,
             Enable unlisted share link
           </label>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-[var(--error)]">{error}</p>}
 
           <div className="flex gap-3">
             <button

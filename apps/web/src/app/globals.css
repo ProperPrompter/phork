@@ -1,21 +1,225 @@
 @import "tailwindcss";
 
-:root {
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #141414;
-  --bg-tertiary: #1e1e1e;
-  --border-color: #2a2a2a;
+/* ═══════════════════════════════════════════════
+   Dark theme (default) — Sonauto-inspired warm
+   orange→pink primary accent, pink complement
+   ═══════════════════════════════════════════════ */
+:root,
+[data-theme="dark"] {
+  --bg-primary: #09090b;
+  --bg-secondary: #111113;
+  --bg-tertiary: #1a1a1f;
+  --bg-elevated: #222228;
+  --border-color: #27272a;
+  --border-subtle: #1e1e22;
   --text-primary: #fafafa;
-  --text-secondary: #a0a0a0;
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
+  --text-secondary: #a1a1aa;
+  --text-muted: #63636e;
+
+  /* Primary accent — warm orange (Sonauto-inspired) */
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+  --accent-subtle: rgba(249, 115, 22, 0.12);
+  --accent-glow: rgba(249, 115, 22, 0.25);
+
+  /* Gradient accent — orange→rose for hero/CTA emphasis */
+  --accent-gradient: linear-gradient(135deg, #f97316 0%, #e11d48 100%);
+  --accent-gradient-subtle: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(225, 29, 72, 0.15) 100%);
+
+  /* Complementary highlight — hot pink (gradient pair with orange) */
+  --highlight: #ec4899;
+  --highlight-hover: #db2777;
+  --highlight-subtle: rgba(236, 72, 153, 0.12);
+  --highlight-glow: rgba(236, 72, 153, 0.25);
+
+  /* Status */
   --success: #22c55e;
-  --warning: #f59e0b;
+  --success-subtle: rgba(34, 197, 94, 0.12);
+  --warning: #eab308;
+  --warning-subtle: rgba(234, 179, 8, 0.12);
   --error: #ef4444;
+  --error-subtle: rgba(239, 68, 68, 0.12);
+
+  /* Asset-type semantic tokens (derived from accent/highlight/status) */
+  --type-video: var(--accent);
+  --type-video-subtle: var(--accent-subtle);
+  --type-audio: var(--highlight);
+  --type-audio-subtle: var(--highlight-subtle);
+  --type-image: #22c55e;
+  --type-image-subtle: rgba(34, 197, 94, 0.12);
+  --type-render: var(--accent);
+  --type-render-subtle: var(--accent-subtle);
+
+  /* Sidebar */
+  --sidebar-width: 64px;
+  --sidebar-bg: #09090b;
+
+  /* Cards */
+  --card-bg: var(--bg-secondary);
+  --card-border: var(--border-color);
+  --card-hover-border: #3f3f46;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  /* Timeline */
+  --track-bg: #0c0c0e;
+  --track-shot-bg: var(--bg-tertiary);
+  --track-label-width: 100px;
+  --track-height: 56px;
+  --ruler-height: 28px;
+  --playhead-color: #ef4444;
+  --track-video-clip: var(--accent);
+  --track-audio-clip: var(--highlight);
+
+  /* Input */
+  --input-bg: var(--bg-tertiary);
+  --input-border: var(--border-color);
+  --input-focus: var(--accent);
+
+  /* Settings panel */
+  --panel-bg: var(--bg-secondary);
+  --panel-border: var(--border-color);
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.6);
 }
 
+/* ═══════════════════════════════════════════════
+   Light theme — warm accent on clean whites,
+   pink complement for balance
+   ═══════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg-primary: #fafafa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f4f4f5;
+  --bg-elevated: #e4e4e7;
+  --border-color: #d4d4d8;
+  --border-subtle: #e4e4e7;
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+
+  /* Primary accent — warm orange */
+  --accent: #ea580c;
+  --accent-hover: #c2410c;
+  --accent-subtle: rgba(234, 88, 12, 0.08);
+  --accent-glow: rgba(234, 88, 12, 0.15);
+
+  /* Gradient accent */
+  --accent-gradient: linear-gradient(135deg, #ea580c 0%, #be123c 100%);
+  --accent-gradient-subtle: linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(190, 18, 60, 0.08) 100%);
+
+  /* Complementary highlight — hot pink */
+  --highlight: #db2777;
+  --highlight-hover: #be185d;
+  --highlight-subtle: rgba(219, 39, 119, 0.08);
+  --highlight-glow: rgba(219, 39, 119, 0.15);
+
+  /* Status */
+  --success: #16a34a;
+  --success-subtle: rgba(22, 163, 74, 0.08);
+  --warning: #ca8a04;
+  --warning-subtle: rgba(202, 138, 4, 0.08);
+  --error: #dc2626;
+  --error-subtle: rgba(220, 38, 38, 0.08);
+
+  /* Asset-type semantic tokens */
+  --type-video: var(--accent);
+  --type-video-subtle: var(--accent-subtle);
+  --type-audio: var(--highlight);
+  --type-audio-subtle: var(--highlight-subtle);
+  --type-image: #16a34a;
+  --type-image-subtle: rgba(22, 163, 74, 0.08);
+  --type-render: var(--accent);
+  --type-render-subtle: var(--accent-subtle);
+
+  /* Sidebar */
+  --sidebar-bg: #ffffff;
+
+  /* Cards */
+  --card-bg: #ffffff;
+  --card-border: #e4e4e7;
+  --card-hover-border: #a1a1aa;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  /* Timeline */
+  --track-bg: #f4f4f5;
+  --track-shot-bg: #ffffff;
+  --track-label-width: 100px;
+  --track-height: 56px;
+  --ruler-height: 28px;
+  --playhead-color: #dc2626;
+  --track-video-clip: var(--accent);
+  --track-audio-clip: var(--highlight);
+
+  /* Input */
+  --input-bg: #ffffff;
+  --input-border: #d4d4d8;
+  --input-focus: var(--accent);
+
+  /* Settings panel */
+  --panel-bg: #ffffff;
+  --panel-border: #e4e4e7;
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* ═══════════════════════════════════════════════
+   Base styles
+   ═══════════════════════════════════════════════ */
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Smooth theme transition for interactive elements */
+button, a, input, select, textarea {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ═══════════════════════════════════════════════
+   Custom scrollbar — ultra-thin, minimal
+   ═══════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+::-webkit-scrollbar-button { display: none; }
+
+/* Firefox thin scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+[data-theme="light"] {
+  scrollbar-color: rgba(0, 0, 0, 0.08) transparent;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.08); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.15); }
+
+/* ═══════════════════════════════════════════════
+   Utility classes
+   ═══════════════════════════════════════════════ */
+.gradient-accent-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-accent-bg {
+  background: var(--accent-gradient-subtle);
+}
+
+/* Active sidebar icon glow */
+.sidebar-active-glow {
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* Card hover lift */
+.card-hover:hover {
+  box-shadow: var(--card-shadow);
+  transform: translateY(-1px);
 }

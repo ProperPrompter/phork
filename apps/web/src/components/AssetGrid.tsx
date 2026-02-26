@@ -57,7 +57,7 @@ export function AssetGrid({ assets, selectable, selectedIds, onToggleSelect, emp
             className="relative rounded-lg border p-3 text-left text-xs transition-colors"
             style={{
               borderColor: isSelected ? 'var(--accent)' : 'var(--border-color)',
-              backgroundColor: isSelected ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-tertiary)',
+              backgroundColor: isSelected ? 'var(--accent-subtle)' : 'var(--bg-tertiary)',
               cursor: selectable ? 'pointer' : 'default',
             }}
           >

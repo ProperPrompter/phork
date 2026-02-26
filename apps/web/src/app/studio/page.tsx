@@ -117,7 +117,7 @@ export default function StudioPage() {
                 className="rounded-lg border p-3 text-left text-sm transition-colors"
                 style={{
                   borderColor: !templateId ? 'var(--accent)' : 'var(--border-color)',
-                  backgroundColor: !templateId ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-tertiary)',
+                  backgroundColor: !templateId ? 'var(--accent-subtle)' : 'var(--bg-tertiary)',
                 }}
               >
                 <div className="font-medium">Blank Project</div>
@@ -130,7 +130,7 @@ export default function StudioPage() {
                   className="rounded-lg border p-3 text-left text-sm transition-colors"
                   style={{
                     borderColor: templateId === t.id ? 'var(--accent)' : 'var(--border-color)',
-                    backgroundColor: templateId === t.id ? 'rgba(124, 58, 237, 0.1)' : 'var(--bg-tertiary)',
+                    backgroundColor: templateId === t.id ? 'var(--accent-subtle)' : 'var(--bg-tertiary)',
                   }}
                 >
                   <div className="font-medium">{t.name}</div>

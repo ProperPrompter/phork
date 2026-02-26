@@ -62,7 +62,7 @@ export default function ViewerPage() {
   if (error || !data) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <p className="text-red-400">{error || 'Not found'}</p>
+        <p className="text-[var(--error)]">{error || 'Not found'}</p>
         {!token && (
           <button
             onClick={() => router.push('/login')}
